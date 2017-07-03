@@ -9,11 +9,13 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.logging.Level;
+import sc2toolkit.common.Utils;
 import sc2toolkit.common.version.impl.VersionBean;
 import sc2toolkit.mpq.InvalidMpqArchiveException;
 import sc2toolkit.mpq.MpqContent;

@@ -12,6 +12,7 @@ package sc2toolkit.replay.impl;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.IEvent;
 import sc2toolkit.replay.model.IRepProcessor;
 

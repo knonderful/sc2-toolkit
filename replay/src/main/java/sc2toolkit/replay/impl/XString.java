@@ -9,6 +9,7 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import sc2toolkit.replay.model.IXString;
 
 /**

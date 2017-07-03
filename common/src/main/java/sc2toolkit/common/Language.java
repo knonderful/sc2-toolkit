@@ -7,7 +7,7 @@
  * Copying, modifying, distributing, refactoring without the author's permission
  * is prohibited and protected by Law.
  */
-package sc2toolkit.replay.impl;
+package sc2toolkit.common;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;

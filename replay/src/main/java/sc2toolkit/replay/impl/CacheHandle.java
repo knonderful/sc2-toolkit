@@ -9,10 +9,12 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.ICacheHandle;
 
 /**

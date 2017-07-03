@@ -9,6 +9,7 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.IBitArray;
 
 /**

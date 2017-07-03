@@ -10,6 +10,7 @@
 package sc2toolkit.replay.impl;
 
 import java.util.Map;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.IPlayer;
 import sc2toolkit.replay.model.Race;
 import sc2toolkit.replay.model.Result;

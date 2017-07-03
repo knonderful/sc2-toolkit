@@ -12,6 +12,7 @@ package sc2toolkit.replay.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.GameMode;
 import sc2toolkit.replay.model.IAttribute;
 import sc2toolkit.replay.model.IAttributesEvents;

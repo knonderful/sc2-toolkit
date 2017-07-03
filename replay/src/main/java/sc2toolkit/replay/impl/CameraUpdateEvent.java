@@ -9,6 +9,7 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import java.util.Map;
 import sc2toolkit.replay.model.ICameraUpdateEvent;
 import sc2toolkit.replay.model.IRepProcessor;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package sc2toolkit.replay.impl;
+package sc2toolkit.common;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

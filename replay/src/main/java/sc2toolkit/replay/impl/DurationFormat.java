@@ -9,6 +9,9 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
+import sc2toolkit.common.Utils;
+
 /**
  * Representation formats of a time duration value.
  * 

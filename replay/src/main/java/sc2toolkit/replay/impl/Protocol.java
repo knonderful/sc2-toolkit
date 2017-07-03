@@ -9,6 +9,7 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.logging.Level;
+import sc2toolkit.common.Utils;
 
 /**
  * Protocol handler.

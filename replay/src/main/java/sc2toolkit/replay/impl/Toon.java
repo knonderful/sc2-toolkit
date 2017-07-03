@@ -9,12 +9,13 @@
  */
 package sc2toolkit.replay.impl;
 
-
+import sc2toolkit.common.Env;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.model.BnetLang;
 import sc2toolkit.replay.model.IToon;
 import sc2toolkit.replay.model.Realm;

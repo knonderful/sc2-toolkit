@@ -33,13 +33,13 @@ import sc2toolkit.replay.impl.Ability;
 import sc2toolkit.replay.impl.BuildAbility;
 import sc2toolkit.replay.impl.BuildCommand;
 import sc2toolkit.replay.impl.Command;
-import sc2toolkit.replay.impl.Env;
+import sc2toolkit.common.Env;
+import sc2toolkit.common.Utils;
 import sc2toolkit.replay.impl.TrainAbility;
 import sc2toolkit.replay.impl.TrainCommand;
 import sc2toolkit.replay.impl.Unit;
 import sc2toolkit.replay.impl.UpgradeAbility;
 import sc2toolkit.replay.impl.UpgradeCommand;
-import sc2toolkit.replay.impl.Utils;
 import sc2toolkit.replay.impl.XmlProcessor;
 import sc2toolkit.replay.model.IAbility;
 

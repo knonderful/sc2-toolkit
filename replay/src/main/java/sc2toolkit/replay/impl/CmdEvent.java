@@ -9,6 +9,7 @@
  */
 package sc2toolkit.replay.impl;
 
+import sc2toolkit.common.Env;
 import sc2toolkit.balancedata.BalanceData;
 import java.util.Map;
 import sc2toolkit.balancedata.model.IBalanceData;
