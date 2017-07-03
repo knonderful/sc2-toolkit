@@ -32,12 +32,9 @@ public class TrackerEventFactory extends EventFactory {
 
   /**
    * Creates a new {@link TrackerEventFactory}.
-   *
-   * @param replay reference to the {@link Replay} being parsed, source for
-   *               optionally required more information
    */
-  public TrackerEventFactory(final Replay replay) {
-    baseBuild = replay.header.baseBuild;
+  public TrackerEventFactory(final Header header) {
+    baseBuild = header.baseBuild;
   }
 
   @Override

@@ -42,13 +42,10 @@ public class GameEventFactory extends EventFactory {
 
   /**
    * Creates a new {@link GameEventFactory}.
-   *
-   * @param replay reference to the {@link Replay} being parsed, source for
-   *               optionally required more information
    */
-  public GameEventFactory(final Replay replay) {
-    this.balanceData = replay.getBalanceData();
-    baseBuild = replay.header.baseBuild;
+  public GameEventFactory(final Header header, BalanceData balanceData) {
+    this.balanceData = balanceData;
+    baseBuild = header.baseBuild;
   }
 
   @Override

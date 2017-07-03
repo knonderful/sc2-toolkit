@@ -16,5 +16,4 @@ public class Env {
 
   public static final Charset UTF8 = StandardCharsets.UTF_8;
   public static final Language LANG = new Language();
-  public static final Logger LOGGER = Logger.getLogger(Env.class.getName());
 }

@@ -66,32 +66,4 @@ public interface ISelectionTracker {
    */
   void processControlGroupUpdate(IControlGroupUpdateEvent event);
 
-  /**
-   * Returns an HTML formatted string representation of the selection specified
-   * by its control group index.<br>
-   * The returned string might contain HTML formatting elements but does not
-   * start with the <code>&lt;html&gt;</code> tag.
-   *
-   * @param controlGroupIndex index of the control group whose string
-   *                          representation to return, must be in the range of
-   *                          0..11 (the last one is the active selection)
-   * @param repProc           reference to the rep processor in case additional
-   *                          info is required (e.g. unit names)
-   * @return a string representation of the selection specified by its control
-   *         group index
-   */
-  String getSelectionString(int controlGroupIndex, IRepProcessor repProc);
-
-  /**
-   * Returns the selection string of the active selection. See
-   * {@link #getSelectionString(int, IRepProcessor)} for more details.
-   *
-   * @param repProc reference to the rep processor in case additional info is
-   *                required (e.g. unit names)
-   * @return a string representation of the active selection
-   *
-   * @see #getSelectionString(int, IRepProcessor)
-   */
-  String getActiveSelectionString(IRepProcessor repProc);
-
 }

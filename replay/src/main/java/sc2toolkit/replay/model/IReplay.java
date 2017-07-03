@@ -10,6 +10,7 @@
 package sc2toolkit.replay.model;
 
 import sc2toolkit.balancedata.model.IBalanceData;
+import sc2toolkit.common.exception.TkResourceException;
 
 /**
  * Interface modeling a StarCraft II replay file.

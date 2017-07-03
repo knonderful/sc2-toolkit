@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import sc2toolkit.common.Utils;
+import sc2toolkit.common.exception.TkResourceException;
 import sc2toolkit.common.version.impl.VersionBean;
 import sc2toolkit.replay.model.Controller;
 import sc2toolkit.replay.model.ExpansionLevel;
@@ -157,7 +158,7 @@ public class RepProcessor implements IRepProcessor {
    *
    * @param file replay file to process
    */
-  public RepProcessor(final Path file) {
+  public RepProcessor(final Path file) throws TkResourceException {
     this(file, RepParserEngine.FULL_CONTENT_SET);
   }
 
@@ -177,7 +178,7 @@ public class RepProcessor implements IRepProcessor {
    *                   and {@link RepContent#ATTRIBUTES_EVENTS} are always
    *                   parsed; extra content is to be listed here
    */
-  public RepProcessor(final Path file, final Set< RepContent> contentSet) {
+  public RepProcessor(final Path file, final Set< RepContent> contentSet) throws TkResourceException {
     this(file, RepParserEngine.parseReplay(file, contentSet));
   }
 

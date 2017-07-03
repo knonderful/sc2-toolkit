@@ -9,13 +9,15 @@
  */
 package sc2toolkit.mpq;
 
+import sc2toolkit.common.exception.TkResourceException;
+
 /**
  * Exception to indicate that the specified MPQ archive is invalid or not
  * supported.
  *
  * @author Andras Belicza
  */
-public class InvalidMpqArchiveException extends Exception {
+public class InvalidMpqArchiveException extends TkResourceException {
 
   /**
    * Generated serial version UID by Eclipse.

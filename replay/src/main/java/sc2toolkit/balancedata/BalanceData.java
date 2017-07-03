@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,6 +34,8 @@ import sc2toolkit.replay.impl.BuildCommand;
 import sc2toolkit.replay.impl.Command;
 import sc2toolkit.common.Env;
 import sc2toolkit.common.Utils;
+import sc2toolkit.common.exception.TkResourceException;
+import sc2toolkit.common.exception.TkRuntimeException;
 import sc2toolkit.replay.impl.TrainAbility;
 import sc2toolkit.replay.impl.TrainCommand;
 import sc2toolkit.replay.impl.Unit;
@@ -99,7 +100,7 @@ public class BalanceData implements IBalanceData {
 
   static {
     // Load latest balance data
-    get(BD_RES_LIST.get(BD_RES_LIST.size() - 1).minVer);
+    TkRuntimeException.wrap(() -> get(BD_RES_LIST.get(BD_RES_LIST.size() - 1).minVer));
   }
 
   /**
@@ -107,8 +108,9 @@ public class BalanceData implements IBalanceData {
    *
    * @param version replay version to return balance data for
    * @return the balance data for the specified replay version
+   * @throws TkResourceException if the underlying resource could not be loaded
    */
-  public static BalanceData get(final VersionView version) {
+  public static BalanceData get(final VersionView version) throws TkResourceException {
     BalanceData bd = VERSION_BALANCE_DATA_MAP.get(version);
 
     if (bd == null && !VERSION_BALANCE_DATA_MAP.containsKey(version)) {
@@ -130,21 +132,19 @@ public class BalanceData implements IBalanceData {
               throw new MissingResourceException("Missing balance data for replay version: " + version, null, null);
             }
 
-            if (in != null) {
-              try (final GZIPInputStream gzin = new GZIPInputStream(in)) {
-                bdRes.balanceData.set(new BalanceData(bdRes.minVer, bdRes.maxVer, gzin));
-              }
+            try (final GZIPInputStream gzin = new GZIPInputStream(in)) {
+              bdRes.balanceData.set(new BalanceData(bdRes.minVer, bdRes.maxVer, gzin));
             }
 
           } catch (final Exception e) {
-            Env.LOGGER.log(Level.SEVERE, "Failed to load balance data for version: " + version, e);
+            throw new TkResourceException("Failed to load balance data for version: " + version, e);
           }
         }
         bd = bdRes.balanceData.get();
       }
 
       if (bd == null) {
-        Env.LOGGER.info("No balance data available for version: " + version);
+        throw new TkResourceException("No balance data available for version: " + version);
       }
 
       // Store balance data even if it's null (so next time we won't have to search and come to this result again)

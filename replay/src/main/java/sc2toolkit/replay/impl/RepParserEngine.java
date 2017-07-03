@@ -9,13 +9,14 @@
  */
 package sc2toolkit.replay.impl;
 
-import sc2toolkit.common.Env;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.logging.Level;
 import sc2toolkit.common.Utils;
+import sc2toolkit.common.exception.TkException;
+import sc2toolkit.common.exception.TkResourceException;
 import sc2toolkit.common.version.impl.VersionBean;
 import sc2toolkit.mpq.InvalidMpqArchiveException;
 import sc2toolkit.mpq.MpqContent;
@@ -53,10 +54,9 @@ public class RepParserEngine {
    * Parses the specified replay file and returns a {@link Replay} object.
    *
    * @param file replay file to be parsed
-   * @return the constructed {@link Replay} object or <code>null</code> if the
-   *         replay cannot be parsed
+   * @return the constructed {@link Replay} object
    */
-  public static Replay parseReplay(final Path file) {
+  public static Replay parseReplay(final Path file) throws TkResourceException {
     return parseReplay(file, FULL_CONTENT_SET);
   }
 
@@ -68,19 +68,13 @@ public class RepParserEngine {
    *                   {@link RepContent#DETAILS}, {@link RepContent#INIT_DATA}
    *                   and {@link RepContent#ATTRIBUTES_EVENTS} are always
    *                   parsed; extra content is to be specified here
-   * @return the constructed {@link Replay} object or <code>null</code> if the
-   *         replay cannot be parsed
+   * @return the constructed {@link Replay} object
    *
    * @see #getRepProc(Path)
    */
-  public static Replay parseReplay(final Path file, final Set< RepContent> contentSet) {
+  public static Replay parseReplay(final Path file, final Set< RepContent> contentSet) throws TkResourceException {
     try (final MpqParser mpqParser = new MpqParser(file)) {
-
       return parseReplay(mpqParser, contentSet);
-
-    } catch (final Exception e) {
-      Env.LOGGER.log(Level.FINE, "Failed to parse replay: " + file, e);
-      return null;
     }
   }
 
@@ -93,49 +87,53 @@ public class RepParserEngine {
    *                   and {@link RepContent#ATTRIBUTES_EVENTS} are always
    *                   parsed; extra content is to be specified here
    *
-   * @return the constructed {@link Replay} object or <code>null</code> if the
-   *         replay could not be parsed
+   * @return the constructed {@link Replay} object
    *
    * @throws InvalidMpqArchiveException if error occurs reading files from the
    *                                    MPQ archive
    */
-  private static Replay parseReplay(final MpqParser mpqParser, final Set< RepContent> contentSet) throws InvalidMpqArchiveException {
-    final Replay replay = new Replay();
-
+  private static Replay parseReplay(final MpqParser mpqParser, final Set< RepContent> contentSet) throws TkResourceException {
     // Read replay header, this can be read with any protocol
-    replay.header = new Header(Protocol.DEFAULT.decodeHeader(mpqParser.getUserData().userData));
+    Header header = new Header(Protocol.DEFAULT.decodeHeader(mpqParser.getUserData().userData));
 
-    final Protocol p = Protocol.get(replay.header.getBaseBuild());
-    if (p == null) {
-      Env.LOGGER.info("Unsupported Replay version: " + replay.header.versionString() + " (base build: " + replay.header.getBaseBuild() + ")"
-              + (mpqParser.getFileName() == null ? "!" : ": " + mpqParser.getFileName()));
-      return null;
-    }
+    final Protocol p = Protocol.get(header.getBaseBuild());
 
     // Contents that are always parsed:
-    replay.details = new Details(p.decodeDetails(mpqParser.getFile(RepContent.DETAILS)));
+    Details details = new Details(p.decodeDetails(mpqParser.getFile(RepContent.DETAILS)));
 
-    replay.initData = new InitData(p.decodeInitData(mpqParser.getFile(RepContent.INIT_DATA)));
+    InitData initData = new InitData(p.decodeInitData(mpqParser.getFile(RepContent.INIT_DATA)));
 
-    replay.attributesEvents = new AttributesEvents(p.decodeAttributesEvents(mpqParser.getFile(RepContent.ATTRIBUTES_EVENTS)));
+    AttributesEvents attributesEvents = new AttributesEvents(p.decodeAttributesEvents(mpqParser.getFile(RepContent.ATTRIBUTES_EVENTS)));
+
+    int[] playerIdUserIdMap = Replay.createPlayerIdUserIdMap(initData, attributesEvents);
 
     // Optionally parsed contents:
+    MessageEvents messageEvents;
     if (contentSet.contains(RepContent.MESSAGE_EVENTS)) {
-      replay.messageEvents = new MessageEvents(p.decodeMessageEvents(mpqParser.getFile(RepContent.MESSAGE_EVENTS), replay));
+      messageEvents = new MessageEvents(p.decodeMessageEvents(mpqParser.getFile(RepContent.MESSAGE_EVENTS), playerIdUserIdMap));
+    } else {
+      messageEvents = null;
     }
 
+    GameEvents gameEvents;
     if (contentSet.contains(RepContent.GAME_EVENTS)) {
-      replay.gameEvents = new GameEvents(p.decodeGameEvents(mpqParser.getFile(RepContent.GAME_EVENTS), replay));
+      gameEvents = new GameEvents(p.decodeGameEvents(mpqParser.getFile(RepContent.GAME_EVENTS), header, Replay.createBalanceData(header), playerIdUserIdMap));
+    } else {
+      gameEvents = null;
     }
 
+    TrackerEvents trackerEvents;
     if (contentSet.contains(RepContent.TRACKER_EVENTS)) {
       final byte[] trackerData = mpqParser.getFile(RepContent.TRACKER_EVENTS);
-      if (trackerData != null) {
-        replay.trackerEvents = new TrackerEvents(p.decodeTrackerEvents(trackerData, replay));
+      if (trackerData == null) {
+        throw new TkResourceException("Could not retrieve tracker events file.");
       }
+      trackerEvents = new TrackerEvents(p.decodeTrackerEvents(trackerData, header, playerIdUserIdMap));
+    } else {
+      trackerEvents = null;
     }
 
-    return replay;
+    return new Replay(header, details, initData, attributesEvents, messageEvents, gameEvents, trackerEvents, playerIdUserIdMap);
   }
 
   /**
@@ -145,12 +143,11 @@ public class RepParserEngine {
    *
    * @param file replay file whose {@link RepProcessor} object to return
    * @return a {@link RepProcessor} preferably constructed and initialized from
-   *         the {@link RepProcCache} or <code>null</code> if the replay cannot
-   *         be parsed
+   *         the {@link RepProcCache}
    *
    * @see #parseReplay(Path)
    */
-  public static RepProcessor getRepProc(final Path file) {
+  public static RepProcessor getRepProc(final Path file) throws TkException {
     try (final MpqParser mpqParser = new MpqParser(file)) {
 
       // Replay Key specification:
@@ -162,12 +159,18 @@ public class RepParserEngine {
       // therefore allows fast reading and digest calculation.
       final byte[] mpqAttributes = mpqParser.getFile(MpqContent.ATTRIBUTES);
       if (mpqAttributes == null) {
-        throw new NullPointerException("MPQ archive does not contain \"" + MpqContent.ATTRIBUTES.fileName + "\"!");
+        throw new TkResourceException("MPQ archive does not contain \"" + MpqContent.ATTRIBUTES.fileName + "\"!");
       }
 
       // Optimization: 160-bit SHA-1 is 20 bytes, in Base64 it's 20*4/3 = 26.6 chars,
       // so 27 chars is enough, Base64 generates 28 chars => cut off the last char which is always '='
-      final MessageDigest md = MessageDigest.getInstance("SHA-1");
+      final MessageDigest md;
+      try {
+        md = MessageDigest.getInstance("SHA-1");
+      } catch (NoSuchAlgorithmException e) {
+        throw new TkException(e);
+      }
+
       final String replayKey = Utils.toBase64String(md.digest(mpqAttributes)).substring(0, 27);
 
       final Replay replay = parseReplay(mpqParser, FULL_CONTENT_SET);
@@ -175,10 +178,6 @@ public class RepParserEngine {
         return null;
       }
       return new RepProcessor(file, replay);
-
-    } catch (final Exception e) {
-      Env.LOGGER.log(Level.FINE, "Failed to parse replay: " + file, e);
-      return null;
     }
   }
 

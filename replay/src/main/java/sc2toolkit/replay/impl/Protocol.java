@@ -21,7 +21,10 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.logging.Level;
+import sc2toolkit.balancedata.BalanceData;
 import sc2toolkit.common.Utils;
+import sc2toolkit.common.exception.TkResourceException;
+import sc2toolkit.common.exception.TkRuntimeException;
 
 /**
  * Protocol handler.
@@ -46,10 +49,10 @@ public class Protocol {
    * Returns a protocol handler for the specified base build.
    *
    * @param baseBuild base build to return a protocol handler for
-   * @return a suitable protocol handler for the specified base build; or
-   *         <code>null</code> if the specified base build is not supported
+   * @return a suitable protocol handler for the specified base build
+   * @throws TkResourceException if the underlying resource could not be loaded.
    */
-  public static Protocol get(final Integer baseBuild) {
+  public static Protocol get(final Integer baseBuild) throws TkResourceException {
     Protocol p = BBUILD_PROTOCOL_MAP.get(baseBuild);
 
     if (p == null && !BBUILD_PROTOCOL_MAP.containsKey(baseBuild)) {
@@ -57,9 +60,7 @@ public class Protocol {
         p = new Protocol(baseBuild);
       } catch (final Exception e) {
         // Catch other exceptions not just IOException, there are potential RuntimeExceptions like NumberFormatException
-        if (!(e instanceof MissingResourceException)) {
-          Env.LOGGER.log(Level.SEVERE, "Failed to load static protocol data for base build: " + baseBuild, e);
-        }
+        throw new TkResourceException("Failed to load static protocol data for base build: " + baseBuild, e);
       }
 
       // Store protocol even if it's null (so next time we don't have to come to this result again)
@@ -75,7 +76,7 @@ public class Protocol {
    * use the protocol handler for the latest supported base build because it's
    * the most likely needed).
    */
-  public static final Protocol DEFAULT = get(54724);
+  public static final Protocol DEFAULT = TkRuntimeException.wrap(() -> get(54724));
 
   /**
    * Base build this protocol handler implements.
@@ -453,42 +454,36 @@ public class Protocol {
    * Decodes the replay message events.
    *
    * @param data   raw byte data to decode
-   * @param replay reference to the {@link Replay} being parsed, source for
-   *               optionally required more information
    * @return the list of decoded message events
    */
-  public List< Event> decodeMessageEvents(final byte[] data, final Replay replay) {
+  public List< Event> decodeMessageEvents(final byte[] data, int[] playerIdUserIdMap) {
     final BitPackedDecoder decoder = new BitPackedDecoder(data, typeInfos, true);
 
-    return decodeEventStream(decoder, messageEventIdTypeid, messageEventTypeMap, true, MESSAGE_EF, replay.getPlayerIdUserIdMap());
+    return decodeEventStream(decoder, messageEventIdTypeid, messageEventTypeMap, true, MESSAGE_EF, playerIdUserIdMap);
   }
 
   /**
    * Decodes the replay game events.
    *
    * @param data   raw byte data to decode
-   * @param replay reference to the {@link Replay} being parsed, source for
-   *               optionally required more information
    * @return the list of decoded game events
    */
-  public List< Event> decodeGameEvents(final byte[] data, final Replay replay) {
+  public List< Event> decodeGameEvents(final byte[] data, final Header header, BalanceData balanceData, int[] playerIdUserIdMap) {
     final BitPackedDecoder decoder = new BitPackedDecoder(data, typeInfos, true);
 
-    return decodeEventStream(decoder, gameEventIdTypeid, gameEventTypeMap, true, new GameEventFactory(replay), replay.getPlayerIdUserIdMap());
+    return decodeEventStream(decoder, gameEventIdTypeid, gameEventTypeMap, true, new GameEventFactory(header, balanceData), playerIdUserIdMap);
   }
 
   /**
    * Decodes the replay tracker events.
    *
    * @param data   raw byte data to decode
-   * @param replay reference to the {@link Replay} being parsed, source for
-   *               optionally required more information
    * @return the list of decoded game events
    */
-  public List< Event> decodeTrackerEvents(final byte[] data, final Replay replay) {
+  public List< Event> decodeTrackerEvents(final byte[] data, final Header header, int[] playerIdUserIdMap) {
     final VersionedDecoder decoder = new VersionedDecoder(data, typeInfos, true);
 
-    return decodeEventStream(decoder, trackerEventIdTypeid, trackerEventTypeMap, false, new TrackerEventFactory(replay), replay.getPlayerIdUserIdMap());
+    return decodeEventStream(decoder, trackerEventIdTypeid, trackerEventTypeMap, false, new TrackerEventFactory(header), playerIdUserIdMap);
   }
 
 }

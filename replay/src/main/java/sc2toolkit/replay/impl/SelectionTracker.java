@@ -12,17 +12,13 @@ package sc2toolkit.replay.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import sc2toolkit.balancedata.model.IBalanceData;
 import sc2toolkit.replay.model.IBitArray;
 import sc2toolkit.replay.model.IControlGroupUpdateEvent;
 import sc2toolkit.replay.model.IDelta;
 import sc2toolkit.replay.model.IPair;
-import sc2toolkit.replay.model.IRepProcessor;
 import sc2toolkit.replay.model.ISelectionDeltaEvent;
 import sc2toolkit.replay.model.ISelectionTracker;
 import sc2toolkit.replay.model.ISubgroup;
-import sc2toolkit.replay.model.IUnit;
-import sc2toolkit.replay.model.TagTransformation;
 
 /**
  * Player selection tracker.
@@ -219,79 +215,6 @@ public class SelectionTracker implements ISelectionTracker {
         }
       }
     }
-  }
-
-  @Override
-  public String getSelectionString(final int controlGroupIndex, final IRepProcessor repProc) {
-    return getSelectionString(cgSelections[controlGroupIndex], repProc);
-  }
-
-  @Override
-  public String getActiveSelectionString(final IRepProcessor repProc) {
-    return getSelectionString(activeSelection, repProc);
-  }
-
-  /**
-   * Returns an HTML formatted string representation of the specified selection.
-   * <br>
-   * The returned string might contain HTML formatting elements but does not
-   * start with the <code>&lt;html&gt;</code> tag.
-   *
-   * @param selection selection to be converted to string
-   * @param repProc   reference to the rep processor in case additional info is
-   *                  required (e.g. unit names)
-   * @return a string representation of the specified selection
-   */
-  public static String getSelectionString(final List< Integer[]> selection, final IRepProcessor repProc) {
-    final IBalanceData balanceData = repProc.getReplay().getBalanceData();
-
-    final TagTransformation tagTransformation = repProc.getTagTransformation();
-
-    final StringBuilder sb = new StringBuilder();
-
-    final int size = selection.size();
-    for (int i = 0; i < size;) {
-      // In the string representation only list once units of the same type being neighbors.
-
-      final Integer unitLink = selection.get(i)[0];
-      int count = 1;
-      for (int j = i + 1; j < size; j++) {
-        if (unitLink.equals(selection.get(j)[0])) // No automatic out-boxing, must use either equals() or intValue()!
-        {
-          count++;
-        } else {
-          break;
-        }
-      }
-
-      if (sb.length() > 0) {
-        sb.append("<br>");
-      }
-
-      final IUnit unit = balanceData == null ? null : balanceData.getUnit(unitLink);
-      if (unit == null) {
-        sb.append(" Unknown ").append(unitLink);
-      } else {
-        sb.append(unit.getText());
-      }
-      if (count > 1) {
-        sb.append(" x").append(count);
-      }
-
-      // Now append unit ids
-      sb.append(" <span style='color:#888888'>(");
-      for (int j = 0; j < count; j++) {
-        if (j > 0) {
-          sb.append(", "); // Use comma and space not just a comma because this will be used in tool tip so allow line breaking if too long.
-        }
-        sb.append(tagTransformation.tagToString(selection.get(i + j)[1]));
-      }
-      sb.append(")</span>");
-
-      i += count;
-    }
-
-    return sb.toString();
   }
 
 }

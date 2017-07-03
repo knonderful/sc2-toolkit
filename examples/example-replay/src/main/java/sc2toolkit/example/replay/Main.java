@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import sc2toolkit.balancedata.BalanceData;
+import sc2toolkit.common.exception.TkException;
 import sc2toolkit.replay.impl.ChatEvent;
 import sc2toolkit.replay.impl.Event;
 import sc2toolkit.replay.impl.RepProcessor;
@@ -32,7 +33,7 @@ public class Main {
 
   private static final Logger LOG = Logger.getLogger(Main.class.getName());
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws TkException {
     Path mapPath = Paths.get("test.SC2Replay");
     System.out.println("FILE: " + mapPath.toAbsolutePath());
     RepProcessor proc = new RepProcessor(mapPath);

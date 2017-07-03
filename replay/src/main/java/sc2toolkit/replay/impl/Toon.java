@@ -9,6 +9,8 @@
  */
 package sc2toolkit.replay.impl;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import sc2toolkit.common.Env;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import sc2toolkit.common.Utils;
+import sc2toolkit.common.exception.TkRuntimeException;
 import sc2toolkit.replay.model.BnetLang;
 import sc2toolkit.replay.model.IToon;
 import sc2toolkit.replay.model.Realm;
@@ -191,9 +194,8 @@ public class Toon extends StructView implements IToon {
       sb.append(realmId).append('/').append(URLEncoder.encode(playerName, "UTF-8")).append('/');
 
       return new URL(region.bnetUrl, sb.toString());
-    } catch (final Exception e) {
-      Env.LOGGER.log(Level.SEVERE, "Failed to create profile URL for toon: " + this + ", player name: " + playerName, e);
-      return null;
+    } catch (MalformedURLException | UnsupportedEncodingException e) {
+      throw new TkRuntimeException(e);
     }
   }
 

@@ -11,6 +11,7 @@ package sc2toolkit.replay.impl;
 
 import sc2toolkit.balancedata.BalanceData;
 import java.util.Map;
+import sc2toolkit.common.exception.TkResourceException;
 import sc2toolkit.replay.model.Controller;
 import sc2toolkit.replay.model.IReplay;
 
@@ -24,43 +25,59 @@ public class Replay implements IReplay {
   /**
    * Header info of the replay.
    */
-  public Header header;
+  public final Header header;
 
   /**
    * Details of the replay.
    */
-  public Details details;
+  public final Details details;
 
   /**
    * Init data of the replay.
    */
-  public InitData initData;
+  public final InitData initData;
 
   /**
    * Attributes events of the replay.
    */
-  public AttributesEvents attributesEvents;
+  public final AttributesEvents attributesEvents;
 
   /**
    * Message events of the replay.
    */
-  public MessageEvents messageEvents;
+  public final MessageEvents messageEvents;
 
   /**
    * Game events of the replay.
    */
-  public GameEvents gameEvents;
+  public final GameEvents gameEvents;
 
   /**
    * Tracker events of the replay.
    */
-  public TrackerEvents trackerEvents;
+  public final TrackerEvents trackerEvents;
 
   /**
    * The <b>playerId &rArr; userId</b> mapping in the form of an array where the
    * index is the player id and the value is the user id.
    */
-  private int[] playerIdUserIdMap;
+  private final int[] playerIdUserIdMap;
+
+  public Replay(Header header, Details details, InitData initData, AttributesEvents attributesEvents, MessageEvents messageEvents, GameEvents gameEvents, TrackerEvents trackerEvents, int[] playerIdUserIdMap) throws TkResourceException {
+    this.header = header;
+    this.details = details;
+    this.initData = initData;
+    this.attributesEvents = attributesEvents;
+    this.messageEvents = messageEvents;
+    this.gameEvents = gameEvents;
+    this.trackerEvents = trackerEvents;
+    this.balanceData = createBalanceData(header);
+    this.playerIdUserIdMap = playerIdUserIdMap;
+  }
+
+  public static BalanceData createBalanceData(Header header) throws TkResourceException {
+    return BalanceData.get(header.getVersionView());
+  }
 
   /**
    * Lazily initialized balance data.
@@ -102,6 +119,10 @@ public class Replay implements IReplay {
     return trackerEvents;
   }
 
+  public int[] getPlayerIdUserIdMap() {
+    return playerIdUserIdMap;
+  }
+
   /**
    * Returns the <b>playerId &rArr; userId</b> mapping in the form of an array
    * where the index is the player id and the value is the user id.
@@ -120,9 +141,8 @@ public class Replay implements IReplay {
    *
    * @return the <b>playerId &rArr; userId</b> mapping
    */
-  public int[] getPlayerIdUserIdMap() {
-    if (playerIdUserIdMap == null) {
-      playerIdUserIdMap = new int[17]; // Allow +1 because player id is 1-based
+  public static int[] createPlayerIdUserIdMap(InitData initData, AttributesEvents attributesEvents) {
+      int[] playerIdUserIdMap = new int[17]; // Allow +1 because player id is 1-based
 
       final Slot[] slots = initData.getLobbyState().getSlots();
       final Map< Integer, Map< Integer, Attribute>> scopes = attributesEvents.scopes;
@@ -148,7 +168,6 @@ public class Replay implements IReplay {
         }
 
         playerIdUserIdMap[++playerId] = slot.userId == null ? -1 : slot.userId;
-      }
     }
 
     return playerIdUserIdMap;
@@ -156,10 +175,6 @@ public class Replay implements IReplay {
 
   @Override
   public BalanceData getBalanceData() {
-    if (balanceData == null) {
-      balanceData = BalanceData.get(header.getVersionView());
-    }
-
     return balanceData;
   }
 
