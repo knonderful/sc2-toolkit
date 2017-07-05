@@ -9,15 +9,19 @@ import java.util.LinkedList;
  */
 public class UiState {
 
-  private final Collection<UiScreen> screens;
+  private Collection<String> activeScreens;
+
+  private UiState() {
+    // For GSON
+  }
 
   /**
    * Creates a new instance.
    *
-   * @param screens The screens.
+   * @param activeScreens The screens.
    */
-  public UiState(Collection<UiScreen> screens) {
-    this.screens = new LinkedList<>(screens);
+  public UiState(Collection<String> activeScreens) {
+    this.activeScreens = new LinkedList<>(activeScreens);
   }
 
   /**
@@ -25,8 +29,8 @@ public class UiState {
    *
    * @return A collection of screens.
    */
-  public Collection<UiScreen> getScreens() {
-    return Collections.unmodifiableCollection(screens);
+  public Collection<String> getScreens() {
+    return Collections.unmodifiableCollection(activeScreens);
   }
 
   /**
@@ -36,6 +40,6 @@ public class UiState {
    *         {@code false} if the application is in the menus.
    */
   public boolean isInGame() {
-    return screens.isEmpty();
+    return activeScreens.isEmpty();
   }
 }

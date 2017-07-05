@@ -5,11 +5,11 @@ package sc2toolkit.game.client.model;
  */
 public class Player {
 
-  private final long id;
-  private final String name;
-  private final PlayerType type;
-  private final Race race;
-  private final Result result;
+  private long id;
+  private String name;
+  private PlayerType type;
+  private Race race;
+  private Result result;
 
   /**
    * Creates a new instance.
