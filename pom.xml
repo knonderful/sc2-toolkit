@@ -11,6 +11,7 @@
     <module>bzip2</module>
     <module>replay</module>
     <module>examples</module>
+    <module>apps</module>
     <module>game-client-api</module>
   </modules>
   <properties>
@@ -28,4 +29,15 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
