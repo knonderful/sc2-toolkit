@@ -3,3 +3,7 @@
 /mpq-util/target/
 /replay/target/
 /examples/example-replay/target/
+/apps/overwolf-app/nbproject/private/
+/game-client-api/target/
+/apps/toolkit-app/target/
+/apps/toolkit-app/*.mp3
