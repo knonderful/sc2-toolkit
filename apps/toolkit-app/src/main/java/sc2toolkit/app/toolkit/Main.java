@@ -15,6 +15,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
@@ -57,50 +59,63 @@ public class Main extends Application {
 
   @Override
   public void start(Stage stage) throws Exception {
-    GridPane rootGrid = new GridPane();
-    rootGrid.setAlignment(Pos.CENTER_LEFT);
-    rootGrid.setHgap(10);
-    rootGrid.setVgap(10);
-    rootGrid.setPadding(new Insets(25, 25, 25, 25));
+    GridPane generalGrid = new GridPane();
+    generalGrid.setAlignment(Pos.TOP_LEFT);
+    generalGrid.setHgap(10);
+    generalGrid.setVgap(10);
+    generalGrid.setPadding(new Insets(25, 25, 25, 25));
 
     Label stateLabel = new Label("Current state:");
-    rootGrid.add(stateLabel, 0, 0);
+    generalGrid.add(stateLabel, 0, 0);
 
     state = new Label(NOT_RUNNING);
-    rootGrid.add(state, 1, 0, 2, 1);
+    generalGrid.add(state, 1, 0, 2, 1);
 
     Label playerNameLabel = new Label("Player:");
-    rootGrid.add(playerNameLabel, 0, 1);
+    generalGrid.add(playerNameLabel, 0, 1);
     playerNameInput = new TextField();
-    rootGrid.add(playerNameInput, 1, 1, 2, 1);
+    generalGrid.add(playerNameInput, 1, 1, 2, 1);
 
     playerNameInput.textProperty().addListener((ignore, oldValue, newValue) -> {
       name = newValue;
     });
 
+    GridPane announcementGrid = new GridPane();
+    announcementGrid.setAlignment(Pos.TOP_LEFT);
+    announcementGrid.setHgap(10);
+    announcementGrid.setVgap(10);
+    announcementGrid.setPadding(new Insets(25, 25, 25, 25));
+
     Label victoryLabel = new Label("Victory:");
-    rootGrid.add(victoryLabel, 0, 2);
+    announcementGrid.add(victoryLabel, 0, 2);
 
     Button victoryPlayButton = new Button("Play");
     victoryPlayButton.onActionProperty().set(event -> rewindAndPlay(victoryPlayer));
-    rootGrid.add(victoryPlayButton, 1, 2);
+    announcementGrid.add(victoryPlayButton, 1, 2);
 
     Slider victorySlider = new Slider(0, 1, victoryPlayer.getVolume());
     victorySlider.valueProperty().addListener((ignore, oldValue, newValue) -> victoryPlayer.setVolume(newValue.doubleValue()));
-    rootGrid.add(victorySlider, 2, 2);
+    announcementGrid.add(victorySlider, 2, 2);
 
     Label defeatLabel = new Label("Defeat:");
-    rootGrid.add(defeatLabel, 0, 3);
+    announcementGrid.add(defeatLabel, 0, 3);
 
     Button defeatPlayButton = new Button("Play");
     defeatPlayButton.onActionProperty().set(event -> rewindAndPlay(defeatPlayer));
-    rootGrid.add(defeatPlayButton, 1, 3);
+    announcementGrid.add(defeatPlayButton, 1, 3);
 
     Slider defeatSlider = new Slider(0, 1, defeatPlayer.getVolume());
     defeatSlider.valueProperty().addListener((ignore, oldValue, newValue) -> defeatPlayer.setVolume(newValue.doubleValue()));
-    rootGrid.add(defeatSlider, 2, 3);
+    announcementGrid.add(defeatSlider, 2, 3);
 
-    Scene scene = new Scene(rootGrid);
+    Tab generalTab = new Tab("General", generalGrid);
+    Tab announcementTab = new Tab("Announcement", announcementGrid);
+
+    TabPane tabs = new TabPane(generalTab, announcementTab);
+    tabs.getSelectionModel().select(generalTab);
+    tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+    Scene scene = new Scene(tabs);
     stage.setTitle("SC2 Tracker");
     stage.setScene(scene);
     stage.show();
