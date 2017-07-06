@@ -16,18 +16,18 @@ import sc2toolkit.game.client.model.UiState;
 
 /**
  * A {@link Sc2AppStateListener} that handles SC2 application state changes and
- * invokes the corresponding methods in {@link Sc2ApplicationEvents}.
+ * invokes the corresponding methods in {@link Sc2ApplicationEventHandler}.
  */
 public class Sc2AppChangeHandler implements Sc2AppStateListener {
 
-  private final Sc2ApplicationEvents events;
+  private final Sc2ApplicationEventHandler events;
 
   /**
    * Creates a new instance.
    *
    * @param events The event receiver.
    */
-  public Sc2AppChangeHandler(Sc2ApplicationEvents events) {
+  public Sc2AppChangeHandler(Sc2ApplicationEventHandler events) {
     this.events = events;
   }
 

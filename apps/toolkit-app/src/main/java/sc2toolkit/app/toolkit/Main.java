@@ -29,9 +29,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
-import sc2toolkit.game.client.Sc2ApplicationEvents;
 import sc2toolkit.game.client.Sc2StateTracker;
 import sc2toolkit.game.client.model.Player;
+import sc2toolkit.game.client.Sc2ApplicationEventHandler;
 
 public class Main extends Application {
 
@@ -195,7 +195,7 @@ public class Main extends Application {
     player.play();
   }
 
-  private class Sc2EventsImpl implements Sc2ApplicationEvents {
+  private class Sc2EventsImpl implements Sc2ApplicationEventHandler {
 
     @Override
     public void startSc2() {

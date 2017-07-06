@@ -4,9 +4,9 @@ import java.util.Collection;
 import sc2toolkit.game.client.model.Player;
 
 /**
- * SC2 application events.
+ * SC2 application event handler.
  */
-public interface Sc2ApplicationEvents {
+public interface Sc2ApplicationEventHandler {
 
   /**
    * Notifies that the SC2 application has been started.
