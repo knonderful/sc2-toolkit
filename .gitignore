@@ -7,3 +7,4 @@
 /game-client-api/target/
 /apps/toolkit-app/target/
 /apps/toolkit-app/*.mp3
+/apps/toolkit-app/sc2tk-app.log

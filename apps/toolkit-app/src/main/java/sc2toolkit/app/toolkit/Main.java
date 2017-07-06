@@ -1,11 +1,15 @@
 package sc2toolkit.app.toolkit;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -42,8 +46,22 @@ public class Main extends Application {
   private MediaPlayer defeatPlayer;
   private String name;
 
+  static {
+    try (InputStream loggingConfig = Main.class.getResourceAsStream("/logging.properties")) {
+      if (loggingConfig != null) {
+        LogManager.getLogManager().readConfiguration(loggingConfig);
+      } else {
+        LOG.log(Level.WARNING, "No logging configuration found.");
+      }
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Could not load logging properties.", e);
+    }
+  }
+
   public static void main(String[] args) {
+    LOG.log(Level.INFO, () -> String.format("Starting SC2 tool kit with arguments: %s.", Arrays.toString(args)));
     launch(args);
+    LOG.log(Level.INFO, "Stopped SC2 tool kit.");
   }
 
   @Override
