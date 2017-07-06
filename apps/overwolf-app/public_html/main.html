@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head> 
+		<link rel="stylesheet" href="style.css" />
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+		<title>SC2 Tool Kit</title>
+    <script type = "text/javascript" src="MooTools-More-1.6.0.js"></script>
+    <script type = "text/javascript" src="responsivevoice.js"></script>
+    <script type = "text/javascript" src="common.js"></script>
+    <script type = "text/javascript" src="window-control.js"></script>
+    <script type = "text/javascript" src="main-controller.js"></script>
+	</head>
+
+	<body id="main-window">
+		<div class="resizeGrip" id="resizeGripTopLeft" onmousedown="windowControl.resize('TopLeft');"></div>
+		<div class="resizeGrip" id="resizeGripTop" onmousedown="windowControl.resize('Top');"></div>
+		<div class="resizeGrip" id="resizeGripTopRight" onmousedown="windowControl.resize('TopRight');"></div>
+		<div class="resizeGrip" id="resizeGripRight" onmousedown="windowControl.resize('Right');"></div>
+		<div class="resizeGrip" id="resizeGripBottomRight" onmousedown="windowControl.resize('BottomRight');"></div>
+		<div class="resizeGrip" id="resizeGripBottom" onmousedown="windowControl.resize('Bottom');"></div>
+		<div class="resizeGrip" id="resizeGripBottomLeft" onmousedown="windowControl.resize('BottomLeft');"></div>
+		<div class="resizeGrip" id="resizeGripLeft" onmousedown="windowControl.resize('Left');"></div>
+		<div id="content" onmousedown="windowControl.move();">
+      <button onclick="mainController.showBuildOrderWindow();">Start</button>
+      <button onclick="mainController.bla();">Test</button>
+		</div>
+	</body>
+</html>

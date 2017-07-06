@@ -1,0 +1,110 @@
+html {
+	overflow: hidden;
+	height: 100%;
+	width: 100%;
+	background: rgba(0, 0, 0, 0.3);
+  font-family: "Lucida Console";
+  font-size: 9px;
+  color: rgb(0, 255, 0);
+}
+
+.resizeGrip {
+	background: rgba(0, 0, 0, 0.5);
+	position: absolute;
+}
+
+#main-window #content {
+	position: absolute;
+	top: 10px;
+	bottom: 10px;
+	left: 10px;
+	right: 10px;
+	padding: 10px;
+}
+
+#buildorder-window #content {
+	position: absolute;
+	top: 3px;
+	bottom: 3px;
+	left: 3px;
+	right: 3px;
+	padding: 0px;
+}
+
+#content label {
+  font-weight: bold;
+  padding-right: 10px;
+}
+
+#resizeGripTop {
+	height: 2px;
+	top: 0;
+	left: 2px;
+	right: 2px;
+	cursor: ns-resize;
+}
+
+#resizeGripBottom {
+	height: 2px;
+	bottom: 0;
+	left: 2px;
+	right: 2px;
+	cursor: ns-resize;
+}
+
+#resizeGripLeft {
+	width: 2px;
+	left: 0;
+	top: 2px;
+	bottom: 2px;
+	cursor: ew-resize;
+}
+
+#resizeGripRight {
+	width: 2px;
+	right: 0;
+	top: 2px;
+	bottom: 2px;
+	cursor: ew-resize;
+}
+
+#resizeGripTopLeft {
+	width: 2px;
+	height: 2px;
+	top: 0;
+	left: 0;
+	cursor: nwse-resize;
+}
+
+#resizeGripBottomLeft {
+	width: 2px;
+	height: 2px;
+	bottom: 0;
+	left: 0;
+	cursor: nesw-resize;
+}
+
+#resizeGripTopRight {
+	width: 2px;
+	height: 2px;
+	top: 0;
+	right: 0;
+	cursor: nesw-resize;
+}
+
+#resizeGripBottomRight {
+	width: 2px;
+	height: 2px;
+	bottom: 0;
+	right: 0;
+	cursor: nwse-resize;
+}
+
+div.buildOrderStep {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+div.buildOrderStep .displayTime {
+	padding-right: 6px;
+}

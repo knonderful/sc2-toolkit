@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "type": "WebApp",
+  "meta": {
+    "name": "SC2 Tool Kit",
+    "version": "1.0.0",
+    "minimum-overwolf-version": "0.77.10",
+    "author": "knonderful",
+    "icon": "IconMouseOver.png",
+    "icon_gray": "IconMouseNormal.png",
+    "description": "SC2 Tool Kit Overwolf App"
+  },
+  "data": {
+    "start_window": "Main",
+    "windows": {
+      "Main": {
+        "file": "public_html/main.html",
+        "transparent": true,
+        "resizable": true,
+        "size": {
+          "width": 400,
+          "height": 300
+        },
+        "min_size": {
+          "width": 150,
+          "height": 200
+        },
+        "max_size": {
+          "width": 600,
+          "height": 500
+        }
+      },
+      "BuildOrder": {
+        "file": "public_html/buildorder.html",
+        "transparent": true,
+        "resizable": true,
+        "size": {
+          "width": 150,
+          "height": 300
+        },
+        "min_size": {
+          "width": 50,
+          "height": 100
+        },
+        "in_game_only": false
+      }
+    },
+    "externally_connectable": {
+      "matches": [
+        "http://http://localhost:6119/*"
+      ]
+    }    
+  }
+}
