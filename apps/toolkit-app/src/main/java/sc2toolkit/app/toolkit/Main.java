@@ -77,6 +77,25 @@ public class Main extends Application {
 
   @Override
   public void start(Stage stage) throws Exception {
+    GridPane generalGrid = createGeneralPage();
+    GridPane announcementGrid = createAnnouncementPage();
+
+    Tab generalTab = new Tab("General", generalGrid);
+    Tab announcementTab = new Tab("Announcement", announcementGrid);
+
+    TabPane tabs = new TabPane(generalTab, announcementTab);
+    tabs.getSelectionModel().select(generalTab);
+    tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+    Scene scene = new Scene(tabs);
+    stage.setTitle("SC2 Tracker");
+    stage.setScene(scene);
+    stage.show();
+
+    startMonitoring();
+  }
+
+  private GridPane createGeneralPage() {
     GridPane generalGrid = new GridPane();
     generalGrid.setAlignment(Pos.TOP_LEFT);
     generalGrid.setHgap(10);
@@ -91,6 +110,7 @@ public class Main extends Application {
 
     Label playerNameLabel = new Label("Player:");
     generalGrid.add(playerNameLabel, 0, 1);
+
     playerNameInput = new TextField();
     generalGrid.add(playerNameInput, 1, 1, 2, 1);
 
@@ -98,6 +118,10 @@ public class Main extends Application {
       name = newValue;
     });
 
+    return generalGrid;
+  }
+
+  private GridPane createAnnouncementPage() {
     GridPane announcementGrid = new GridPane();
     announcementGrid.setAlignment(Pos.TOP_LEFT);
     announcementGrid.setHgap(10);
@@ -126,19 +150,7 @@ public class Main extends Application {
     defeatSlider.valueProperty().addListener((ignore, oldValue, newValue) -> defeatPlayer.setVolume(newValue.doubleValue()));
     announcementGrid.add(defeatSlider, 2, 3);
 
-    Tab generalTab = new Tab("General", generalGrid);
-    Tab announcementTab = new Tab("Announcement", announcementGrid);
-
-    TabPane tabs = new TabPane(generalTab, announcementTab);
-    tabs.getSelectionModel().select(generalTab);
-    tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-    Scene scene = new Scene(tabs);
-    stage.setTitle("SC2 Tracker");
-    stage.setScene(scene);
-    stage.show();
-
-    startMonitoring();
+    return announcementGrid;
   }
 
   private static MediaPlayer createPlayer(String filename) {
