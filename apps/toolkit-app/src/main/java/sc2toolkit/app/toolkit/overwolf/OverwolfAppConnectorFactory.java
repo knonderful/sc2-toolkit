@@ -36,11 +36,13 @@ public class OverwolfAppConnectorFactory {
    */
   public CompletionStage<OverwolfAppConnector> create(InetSocketAddress address) {
     HttpClient client = new HttpClient(address);
-    ShutdownListenerImpl shutdownListener = new ShutdownListenerImpl(client::shutdown);
-    return client.start().thenApply(ignore -> {
+    ShutdownListenerImpl shutdownListener = new ShutdownListenerImpl(client::stop);
+    CompletionStage<OverwolfAppConnector> out = client.start().thenApply(ignore -> {
       shutdownNotifier.addListener(shutdownListener);
       return new OverwolfAppConnectorImpl(client);
     });
+
+    return out;
   }
 
   private class ShutdownListenerImpl implements ShutdownListener {
