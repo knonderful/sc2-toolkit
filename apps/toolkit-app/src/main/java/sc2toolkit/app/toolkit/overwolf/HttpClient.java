@@ -38,10 +38,9 @@ import java.util.logging.Logger;
 public class HttpClient {
 
   private static final Logger LOG = Logger.getLogger(HttpClient.class.getName());
-  private final EventLoopGroup workerGroup = new NioEventLoopGroup(1);
-  private final RequestResponseTracker rrt = new RequestResponseTracker();
+  private final RequestResponseTracker rrt;
   private final InetSocketAddress address;
-  private Bootstrap bootstrap;
+  private final Bootstrap bootstrap;
   private CompletionStage<Channel> channelFuture;
 
   /**
@@ -51,6 +50,8 @@ public class HttpClient {
    */
   public HttpClient(InetSocketAddress address) {
     this.address = address;
+    this.rrt = new RequestResponseTracker();
+    this.bootstrap = createBootstrap(rrt);
   }
 
   /**
@@ -68,23 +69,9 @@ public class HttpClient {
    * @return A {@link CompletionStage} for the operation result.
    */
   public synchronized CompletionStage<Void> start() {
-    if (bootstrap != null) {
+    if (channelFuture != null) {
       return errorFuture(new IllegalStateException("This instance has already been started."));
     }
-
-    bootstrap = new Bootstrap();
-    bootstrap.group(workerGroup)
-            .channel(NioSocketChannel.class)
-            .handler(new ChannelInitializer() {
-              @Override
-              protected void initChannel(Channel ch) throws Exception {
-                ChannelPipeline p = ch.pipeline();
-                p.addLast(new HttpClientCodec());
-                p.addLast(new HttpContentDecompressor());
-                p.addLast(new HttpObjectAggregator(1048576));
-                p.addLast(new HttpResponseHandler(rrt));
-              }
-            });
 
     return connect().thenApply(channel -> null);
   }
@@ -102,7 +89,8 @@ public class HttpClient {
 
     return channelFuture.thenCompose(channel -> {
       CompletableFuture<Channel> channelCloseFuture = wrapFuture(channel.closeFuture());
-      workerGroup.shutdownGracefully();
+
+      bootstrap.config().group().shutdownGracefully();
 
       return channelCloseFuture.thenAccept(future -> {
         LOG.info(String.format("Shut down %s successfully.", HttpClient.class.getSimpleName()));
@@ -133,6 +121,23 @@ public class HttpClient {
     });
   }
 
+  private static Bootstrap createBootstrap(RequestResponseTracker rrt) {
+    Bootstrap bootstrap = new Bootstrap();
+    bootstrap.group(new NioEventLoopGroup(1))
+            .channel(NioSocketChannel.class)
+            .handler(new ChannelInitializer() {
+              @Override
+              protected void initChannel(Channel ch) throws Exception {
+                ChannelPipeline p = ch.pipeline();
+                p.addLast(new HttpClientCodec());
+                p.addLast(new HttpContentDecompressor());
+                p.addLast(new HttpObjectAggregator(1048576));
+                p.addLast(new HttpResponseHandler(rrt));
+              }
+            });
+    return bootstrap;
+  }
+
   private CompletionStage<Channel> getChannel() {
     return connect();
   }
@@ -160,6 +165,7 @@ public class HttpClient {
     if (error != null) {
       LOG.log(Level.INFO, String.format("Failed to connect to %s.", address), error);
       this.channelFuture = null;
+      this.bootstrap.config().group().shutdownGracefully();
       return;
     }
 
