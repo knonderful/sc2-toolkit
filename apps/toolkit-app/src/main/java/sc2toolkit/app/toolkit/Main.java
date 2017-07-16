@@ -3,8 +3,12 @@ package sc2toolkit.app.toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +17,8 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -27,6 +33,8 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import sc2toolkit.app.toolkit.overwolf.OverwolfAppConnector;
+import sc2toolkit.app.toolkit.overwolf.OverwolfAppConnectorFactory;
 import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
 import sc2toolkit.game.client.Sc2StateTracker;
@@ -79,11 +87,14 @@ public class Main extends Application {
   public void start(Stage stage) throws Exception {
     GridPane generalGrid = createGeneralPage();
     GridPane announcementGrid = createAnnouncementPage();
+    ShutdownNotifier shutdownObservable = new ShutdownNotifier();
+    GridPane overwolfAppGrid = createOverwolfAppPage(shutdownObservable);
 
     Tab generalTab = new Tab("General", generalGrid);
     Tab announcementTab = new Tab("Announcement", announcementGrid);
+    Tab overwolfAppTab = new Tab("Overwolf App", overwolfAppGrid);
 
-    TabPane tabs = new TabPane(generalTab, announcementTab);
+    TabPane tabs = new TabPane(generalTab, announcementTab, overwolfAppTab);
     tabs.getSelectionModel().select(generalTab);
     tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
@@ -93,6 +104,8 @@ public class Main extends Application {
     stage.show();
 
     startMonitoring();
+
+    stage.setOnCloseRequest(event -> shutdownObservable.notifyShutdown());
   }
 
   private GridPane createGeneralPage() {
@@ -149,6 +162,45 @@ public class Main extends Application {
     Slider defeatSlider = new Slider(0, 1, defeatPlayer.getVolume());
     defeatSlider.valueProperty().addListener((ignore, oldValue, newValue) -> defeatPlayer.setVolume(newValue.doubleValue()));
     announcementGrid.add(defeatSlider, 2, 3);
+
+    return announcementGrid;
+  }
+
+  private GridPane createOverwolfAppPage(ShutdownNotifier exitObservable) {
+    GridPane announcementGrid = new GridPane();
+    announcementGrid.setAlignment(Pos.TOP_LEFT);
+    announcementGrid.setHgap(10);
+    announcementGrid.setVgap(10);
+    announcementGrid.setPadding(new Insets(25, 25, 25, 25));
+
+    OverwolfAppConnectorFactory factory = new OverwolfAppConnectorFactory(exitObservable);
+    Button connectButton = new Button("Connect");
+    connectButton.onActionProperty().set(event -> {
+      InetAddress address;
+      try {
+        address = InetAddress.getByName("localhost");
+      } catch (UnknownHostException ex) {
+        throw new RuntimeException(ex);
+      }
+
+      connectButton.setDisable(true);
+
+      CompletionStage<OverwolfAppConnector> future = factory.create(new InetSocketAddress(address, 8989));
+      future.handle((connector, exception) -> {
+        if (exception != null) {
+          LOG.log(Level.WARNING, "Could not establish connection to Overwolf App.", exception);
+          return null;
+        }
+        connector.startGame(0, null).handle((nothing, e) -> {
+          if (e != null) {
+            LOG.log(Level.WARNING, "Could not send start game notification.", e);
+          }
+          return null;
+        });
+        return null;
+      });
+    });
+    announcementGrid.add(connectButton, 0, 0);
 
     return announcementGrid;
   }
