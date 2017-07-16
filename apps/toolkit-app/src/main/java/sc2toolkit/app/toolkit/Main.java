@@ -17,8 +17,6 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -174,8 +172,8 @@ public class Main extends Application {
     announcementGrid.setPadding(new Insets(25, 25, 25, 25));
 
     OverwolfAppConnectorFactory factory = new OverwolfAppConnectorFactory(exitObservable);
-    Button connectButton = new Button("Connect");
-    connectButton.onActionProperty().set(event -> {
+    Button startButton = new Button("Start");
+    startButton.onActionProperty().set(event -> {
       InetAddress address;
       try {
         address = InetAddress.getByName("localhost");
@@ -183,7 +181,7 @@ public class Main extends Application {
         throw new RuntimeException(ex);
       }
 
-      connectButton.setDisable(true);
+      startButton.setDisable(true);
 
       CompletionStage<OverwolfAppConnector> future = factory.create(new InetSocketAddress(address, 8989));
       future.handle((connector, exception) -> {
@@ -200,7 +198,7 @@ public class Main extends Application {
         return null;
       });
     });
-    announcementGrid.add(connectButton, 0, 0);
+    announcementGrid.add(startButton, 0, 0);
 
     return announcementGrid;
   }
