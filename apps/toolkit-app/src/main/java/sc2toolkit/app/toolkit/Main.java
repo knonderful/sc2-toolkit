@@ -192,7 +192,7 @@ public class Main extends Application {
       CompletionStage<OverwolfAppConnector> future = factory.create(new InetSocketAddress(address, 8989));
       future.whenComplete((connector, exception) -> {
         if (exception != null) {
-          LOG.log(Level.WARNING, "Could create Overwolf App connector.", exception);
+          LOG.log(Level.WARNING, "Could not create Overwolf App connector.", exception);
           return;
         }
 
