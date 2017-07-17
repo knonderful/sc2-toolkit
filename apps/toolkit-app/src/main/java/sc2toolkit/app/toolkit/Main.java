@@ -244,8 +244,7 @@ public class Main extends Application {
     try {
       stateTracker.update();
     } catch (Exception e) {
-      // TODO: remove this once the code is stable... =)
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "Error while updating the SC2 state tracker.", e);
       throw e;
     }
   }
