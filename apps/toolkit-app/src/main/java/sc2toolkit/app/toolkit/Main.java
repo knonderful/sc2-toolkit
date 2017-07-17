@@ -37,7 +37,6 @@ import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
 import sc2toolkit.game.client.Sc2StateTracker;
 import sc2toolkit.game.client.model.Player;
-import sc2toolkit.game.client.Sc2ApplicationEventHandler;
 
 public class Main extends Application {
 
@@ -45,7 +44,11 @@ public class Main extends Application {
   private static final String NOT_RUNNING = "SC2 not running";
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private final Sc2StateTracker stateTracker = new Sc2StateTracker();
-  private final Sc2AppStateListener changeListener = new Sc2AppChangeHandler(new Sc2EventsImpl());
+  private final Sc2EventHandlerDispatcher sc2EventDispatcher = new Sc2EventHandlerDispatcher(
+          new AnnouncementEventHandler(),
+          new Sc2ClientStateEventHandler()
+  );
+  private final Sc2AppStateListener changeListener = new Sc2AppChangeHandler(sc2EventDispatcher);
   private Label state;
   private TextField playerNameInput;
   private MediaPlayer victoryPlayer;
@@ -266,7 +269,7 @@ public class Main extends Application {
     player.play();
   }
 
-  private class Sc2EventsImpl implements Sc2ApplicationEventHandler {
+  private class Sc2ClientStateEventHandler extends AbstractSc2EventHandler {
 
     @Override
     public void startSc2() {
@@ -292,12 +295,9 @@ public class Main extends Application {
     public void enterReplay(Collection<Player> players) {
       setStateText("In replay");
     }
+  }
 
-    @Override
-    public void updateDisplayTime(double displayTime) {
-      // Not used currently
-      //System.out.printf("Display time: %f%n", displayTime);
-    }
+  private class AnnouncementEventHandler extends AbstractSc2EventHandler {
 
     @Override
     public void playerWon(Player player) {
@@ -311,11 +311,6 @@ public class Main extends Application {
       if (isTargetedPlayer(player)) {
         playDefeat();
       }
-    }
-
-    @Override
-    public void playerTied(Player player) {
-      // Nothing to be done
     }
 
     private boolean isTargetedPlayer(Player player) {
