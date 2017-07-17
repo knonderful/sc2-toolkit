@@ -173,6 +173,9 @@ public class Main extends Application {
 
     OverwolfAppConnectorFactory factory = new OverwolfAppConnectorFactory(exitObservable);
     Button startButton = new Button("Start");
+    Button pingButton = new Button("Ping");
+    pingButton.setDisable(true);
+
     startButton.onActionProperty().set(event -> {
       InetAddress address;
       try {
@@ -184,21 +187,27 @@ public class Main extends Application {
       startButton.setDisable(true);
 
       CompletionStage<OverwolfAppConnector> future = factory.create(new InetSocketAddress(address, 8989));
-      future.handle((connector, exception) -> {
+      future.whenComplete((connector, exception) -> {
         if (exception != null) {
-          LOG.log(Level.WARNING, "Could not establish connection to Overwolf App.", exception);
-          return null;
+          LOG.log(Level.WARNING, "Could create Overwolf App connector.", exception);
+          return;
         }
-        connector.startGame(0, null).handle((nothing, e) -> {
-          if (e != null) {
-            LOG.log(Level.WARNING, "Could not send start game notification.", e);
-          }
-          return null;
+
+        pingButton.onActionProperty().set(evt -> {
+          connector.startGame(0, null).whenComplete((nothing, cause) -> {
+            if (cause != null) {
+              LOG.log(Level.INFO, "Could not send message.", cause);
+              return;
+            }
+
+            LOG.log(Level.INFO, "Message sent OK.");
+          });
         });
-        return null;
+        pingButton.setDisable(false);
       });
     });
     announcementGrid.add(startButton, 0, 0);
+    announcementGrid.add(pingButton, 1, 0);
 
     return announcementGrid;
   }
