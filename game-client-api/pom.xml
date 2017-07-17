@@ -8,11 +8,11 @@
   </parent>
   <artifactId>game-client-api</artifactId>
   <packaging>jar</packaging>
+  <name>SC2 TK :: Game Client API</name>
   <dependencies>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
   </dependencies>
-    <name>SC2 TK :: Game Client API</name>
 </project>
