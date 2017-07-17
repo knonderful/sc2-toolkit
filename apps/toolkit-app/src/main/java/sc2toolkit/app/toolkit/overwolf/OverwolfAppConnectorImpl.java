@@ -12,7 +12,9 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.Charset;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 import sc2toolkit.game.client.model.Player;
 
 /**
@@ -20,6 +22,7 @@ import sc2toolkit.game.client.model.Player;
  */
 public class OverwolfAppConnectorImpl implements OverwolfAppConnector {
 
+  private static final Logger LOG = Logger.getLogger(OverwolfAppConnectorImpl.class.getName());
   private final Gson gson = new Gson();
   private final HttpClient httpClient;
 
@@ -39,13 +42,15 @@ public class OverwolfAppConnectorImpl implements OverwolfAppConnector {
   }
 
   @Override
-  public CompletionStage<Void> updateGameTime(float displayTime) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public CompletionStage<Void> updateGameTime(double displayTime) {
+    LOG.info("Not updating game time. Message not implemented yet.");
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
   public CompletionStage<Void> endGame() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    LOG.info("Not notifying end-game. Message not implemented yet.");
+    return CompletableFuture.completedFuture(null);
   }
 
   private CompletionStage<Void> sendMessage(String path, Object message) {

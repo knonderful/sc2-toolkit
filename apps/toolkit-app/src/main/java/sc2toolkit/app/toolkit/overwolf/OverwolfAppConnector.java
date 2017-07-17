@@ -22,7 +22,7 @@ public interface OverwolfAppConnector {
    * @param displayTime The display time.
    * @return A {@link CompletionStage} for the operation result.
    */
-  CompletionStage<Void> updateGameTime(float displayTime);
+  CompletionStage<Void> updateGameTime(double displayTime);
 
   /**
    * Sends game end information.

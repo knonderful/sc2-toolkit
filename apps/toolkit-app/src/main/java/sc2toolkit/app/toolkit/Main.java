@@ -8,13 +8,18 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -47,9 +52,11 @@ public class Main extends Application {
   private static final String NOT_RUNNING = "SC2 not running";
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private final Sc2StateTracker stateTracker = new Sc2StateTracker();
+  private final OverwolfAppSc2EventHandler overwolfSc2EventHandler = new OverwolfAppSc2EventHandler();
   private final Sc2EventHandlerDispatcher sc2EventDispatcher = new Sc2EventHandlerDispatcher(
           new AnnouncementEventHandler(),
-          new Sc2ClientStateEventHandler()
+          new Sc2ClientStateEventHandler(),
+          overwolfSc2EventHandler
   );
   private final Sc2AppStateListener changeListener = new Sc2AppChangeHandler(sc2EventDispatcher);
   private Label state;
@@ -179,10 +186,6 @@ public class Main extends Application {
 
     OverwolfAppConnectorFactory factory = new OverwolfAppConnectorFactory(exitObservable);
     Button startButton = new Button("Start");
-    Button pingButton = new Button("Ping");
-    pingButton.setDisable(true);
-
-    Player dummyPlayer = new Player(0, "Byun", PlayerType.USER, Race.TERRAN, Result.UNDECIDED);
 
     startButton.onActionProperty().set(event -> {
       InetAddress address;
@@ -201,21 +204,10 @@ public class Main extends Application {
           return;
         }
 
-        pingButton.onActionProperty().set(evt -> {
-          connector.startGame(dummyPlayer).whenComplete((nothing, cause) -> {
-            if (cause != null) {
-              LOG.log(Level.INFO, "Could not send message.", cause);
-              return;
-            }
-
-            LOG.log(Level.INFO, "Message sent OK.");
-          });
-        });
-        pingButton.setDisable(false);
+        this.overwolfSc2EventHandler.setConnector(connector);
       });
     });
     announcementGrid.add(startButton, 0, 0);
-    announcementGrid.add(pingButton, 1, 0);
 
     return announcementGrid;
   }
@@ -329,6 +321,56 @@ public class Main extends Application {
       }
 
       return name.equals(otherName);
+    }
+  }
+
+  private class OverwolfAppSc2EventHandler extends AbstractSc2EventHandler {
+
+    private final AtomicReference<OverwolfAppConnector> connector = new AtomicReference<>();
+
+    public void setConnector(OverwolfAppConnector connector) {
+      this.connector.set(connector);
+    }
+
+    @Override
+    public void updateDisplayTime(double displayTime) {
+      withConnector(c -> c.updateGameTime(displayTime));
+    }
+
+    @Override
+    public void enterGame(Collection<Player> players) {
+      String currentPlayer = name;
+      if (currentPlayer == null || currentPlayer.isEmpty()) {
+        LOG.info("No player set.");
+        return;
+      }
+
+      // Filter out the current player
+      List<Player> opponents = players.stream()
+              .filter(player -> !currentPlayer.equals(player.getName()))
+              .collect(Collectors.toList());
+
+      if (opponents.size() != 1) {
+        LOG.info(String.format("No support for games of %d 'other' player(s).", players.size()));
+        return;
+      }
+
+      withConnector(c -> c.startGame(opponents.get(0)));
+    }
+
+    @Override
+    public void enterMenus() {
+      withConnector(c -> c.endGame());
+    }
+
+    private void withConnector(Consumer<OverwolfAppConnector> connectorConsumer) {
+      OverwolfAppConnector conn = this.connector.get();
+      if (conn == null) {
+        LOG.log(Level.FINE, "No Overwolf connector set.");
+        return;
+      }
+
+      connectorConsumer.accept(conn);
     }
   }
 }
