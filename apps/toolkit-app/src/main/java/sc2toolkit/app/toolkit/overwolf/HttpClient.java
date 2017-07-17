@@ -3,6 +3,7 @@ package sc2toolkit.app.toolkit.overwolf;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -27,11 +28,6 @@ import java.util.logging.Logger;
  * implementation tries to re-establish the connection upon sending a request
  * when it has been lost previously. It is up to the caller to set keep-alive
  * HTTP headers, if this is desired.
- * <p>
- * TODO: 
- * - Handle the disconnect case from the server side (in this case an exception
- *   reaches the end of the pipeline, but the HttpClient does not know about
- *   it).
  */
 public class HttpClient {
 
@@ -50,7 +46,7 @@ public class HttpClient {
   public HttpClient(InetSocketAddress address) {
     this.address = address;
     this.rrt = new RequestResponseTracker();
-    this.bootstrap = createBootstrap(rrt);
+    this.bootstrap = createBootstrap(rrt, this::handleErrorInPipeline);
     this.hasBeenStarted = new AtomicBoolean(false);
   }
 
@@ -119,16 +115,15 @@ public class HttpClient {
       wrapFuture(channel.writeAndFlush(request)).whenComplete((chanFuture, cause) -> {
         if (cause != null) {
           LOG.log(Level.WARNING, "Message could not be sent.", cause);
+          rrt.setResponseConsumer(null);
         }
-
-        rrt.setResponseConsumer(null);
       });
 
       return out;
     });
   }
 
-  private static Bootstrap createBootstrap(RequestResponseTracker rrt) {
+  private static Bootstrap createBootstrap(RequestResponseTracker rrt, Runnable errorInPipelineHandler) {
     Bootstrap bootstrap = new Bootstrap();
     bootstrap.group(new NioEventLoopGroup(1))
             .channel(NioSocketChannel.class)
@@ -140,9 +135,14 @@ public class HttpClient {
                 p.addLast(new HttpContentDecompressor());
                 p.addLast(new HttpObjectAggregator(1048576));
                 p.addLast(new HttpResponseHandler(rrt));
+                p.addLast(new ErrorHandler(errorInPipelineHandler));
               }
             });
     return bootstrap;
+  }
+
+  private synchronized void handleErrorInPipeline() {
+    channelFuture = null;
   }
 
   private CompletionStage<Channel> getChannel() {
@@ -235,9 +235,34 @@ public class HttpClient {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpResponse response) throws Exception {
-      LOG.fine(() -> String.format("Received HTTP response: %s.", response));
+      LOG.info(() -> String.format("Received HTTP response: %s.", response));
 
       rrt.handleResponse(response);
+    }
+  }
+
+  private static class ErrorHandler implements ChannelHandler {
+
+    private final Runnable errorInPipelineHandler;
+
+    ErrorHandler(Runnable errorInPipelineHandler) {
+      this.errorInPipelineHandler = errorInPipelineHandler;
+    }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+      // Nothing to be done
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+      // Nothing to be done
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+      LOG.log(Level.WARNING, "Exception in the pipeline.", cause);
+      errorInPipelineHandler.run();
     }
   }
 }
