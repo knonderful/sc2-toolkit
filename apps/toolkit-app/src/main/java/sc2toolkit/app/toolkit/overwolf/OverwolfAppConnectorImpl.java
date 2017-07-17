@@ -1,9 +1,10 @@
 package sc2toolkit.app.toolkit.overwolf;
 
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpStatusClass;
@@ -56,11 +57,19 @@ public class OverwolfAppConnectorImpl implements OverwolfAppConnector {
   public CompletionStage<Void> endGame() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  
+
   private HttpRequest createRequest(String path) {
-    DefaultHttpHeaders headers = new DefaultHttpHeaders();
+    /*
+     * NOTE: Need to use DefaultFullHttpRequest because otherwise Netty's
+     * HttpObjectEncoder's internal state machine will trigger an
+     * IllegalStateException on the second HttpRequest that is sent.
+     */
+    DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path);
+    HttpHeaders headers = request.headers();
+    // This needs to be "localhost" and not "127.0.0.1", since the Overwolf HTTP server expects that.
     headers.add(HttpHeaderNames.HOST, httpClient.getRemoteAddress().getHostString());
+    // No content for now; this should be added to the DefaultFullHttpRequest once we start using it.
     headers.add(HttpHeaderNames.CONTENT_LENGTH, 0);
-    return new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, path, headers);
+    return request;
   }
 }
