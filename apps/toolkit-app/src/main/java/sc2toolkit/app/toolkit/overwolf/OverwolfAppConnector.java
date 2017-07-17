@@ -11,11 +11,10 @@ public interface OverwolfAppConnector {
   /**
    * Sends game start information.
    *
-   * @param displayTime The display time.
    * @param opponent    The opponent.
    * @return A {@link CompletionStage} for the operation result.
    */
-  CompletionStage<Void> startGame(float displayTime, Player opponent); // + BuildOrder
+  CompletionStage<Void> startGame(Player opponent); // + BuildOrder
 
   /**
    * Sends game time information.

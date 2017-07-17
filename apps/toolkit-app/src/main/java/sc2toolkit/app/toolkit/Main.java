@@ -37,6 +37,9 @@ import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
 import sc2toolkit.game.client.Sc2StateTracker;
 import sc2toolkit.game.client.model.Player;
+import sc2toolkit.game.client.model.PlayerType;
+import sc2toolkit.game.client.model.Race;
+import sc2toolkit.game.client.model.Result;
 
 public class Main extends Application {
 
@@ -179,6 +182,8 @@ public class Main extends Application {
     Button pingButton = new Button("Ping");
     pingButton.setDisable(true);
 
+    Player dummyPlayer = new Player(0, "Byun", PlayerType.USER, Race.TERRAN, Result.UNDECIDED);
+
     startButton.onActionProperty().set(event -> {
       InetAddress address;
       try {
@@ -197,7 +202,7 @@ public class Main extends Application {
         }
 
         pingButton.onActionProperty().set(evt -> {
-          connector.startGame(0, null).whenComplete((nothing, cause) -> {
+          connector.startGame(dummyPlayer).whenComplete((nothing, cause) -> {
             if (cause != null) {
               LOG.log(Level.INFO, "Could not send message.", cause);
               return;
