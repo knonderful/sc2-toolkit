@@ -15,7 +15,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -42,9 +41,6 @@ import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
 import sc2toolkit.game.client.Sc2StateTracker;
 import sc2toolkit.game.client.model.Player;
-import sc2toolkit.game.client.model.PlayerType;
-import sc2toolkit.game.client.model.Race;
-import sc2toolkit.game.client.model.Result;
 
 public class Main extends Application {
 
