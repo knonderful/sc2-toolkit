@@ -22,7 +22,8 @@ var LinkedNode = new Class({
 });
 
 var BuildOrderEntry = new Class({
-  initialize: function (time, displayTime, command) {
+  initialize: function (element, time, displayTime, command) {
+    this.element = element;
     this.time = time;
     this.displayTime = displayTime;
     this.command = command;
@@ -35,14 +36,16 @@ var BuildOrderEntry = new Class({
   },
   getCommand: function () {
     return this.command;
+  },
+  cleanUp: function () {
+    this.element.dispose();
   }
 });
 
 var BuildOrder = new Class({
-  initialize: function () {
-    this.head = null;
-    this.tail = null;
-  },
+  head: null,
+  tail: null,
+  current: null,
   addEntry: function (buildOrderEntry) {
     var lastTail = this.tail;
     this.tail = new LinkedNode(buildOrderEntry);
@@ -50,12 +53,28 @@ var BuildOrder = new Class({
 
     if (lastTail === null) {
       this.head = this.tail;
+      this.current = this.tail;
+      console.log("SETTING CURRENT TO " + this.current);
     } else {
       lastTail.setNext(this.tail);
     }
   },
   getHead: function () {
     return this.head;
+  },
+  cleanUp: function () {
+    var curHead = this.head;
+    while (curHead !== null) {
+      curHead.getData().cleanUp();
+      curHead = curHead.getNext();
+    }
+  },
+  getCurrent: function () {
+    return this.current;
+  },
+  setCurrent: function (node) {
+    console.log("... SETTING CURRENT TO " + node);
+    this.current = node;
   }
 });
 
@@ -79,10 +98,6 @@ var BuildOrderMap = new Class({
     return this.random;
   }
 });
-
-const CLIENT_API_URL = "http://localhost:6119/";
-const UI_URL = CLIENT_API_URL + "ui";
-const GAME_URL = CLIENT_API_URL + "game";
 
 var Sc2GameInfo = new Class({
   initialize: function (uiData, gameData) {
@@ -115,49 +130,108 @@ var Sc2GameInfo = new Class({
   }
 });
 
-// In ms.
-const REQUEST_INTERVAL = 5000;
-
-var Sc2GameDetector = new Class({
-  initialize: function () {
-  },
-  start: function() {
-    this.pollState();
-  },
-  pollState: function () {
-    var jsonRequest = new Request.JSON({url: UI_URL,
-      onSuccess: function (uiData) {
-        console.log("UIDATA " + uiData);
-      },
-      onFailure: function (xhr) {
-        console.log("FAIL " + xhr);
-      }
-    }).get();
-  }
-});
+const WEB_SERVER_PORT = 8989;
+const PATH_START_GAME = "/startGame";
+const PATH_UPDATE_GAME_TIME = "/updateGameTime";
+const PATH_END_GAME = "/endGame";
 
 var BuildOrderController = new Class({
+  buildOrder: null,
   onLoad: function () {
-    this.resetGui();
-    this.gameDetector = new Sc2GameDetector();
-    this.gameDetector.start();
+    this.startServer();
   },
-  resetGui: function () {
-    $('notInGame').show();
-//    $('inGame').hide();
-  },
-  startPolling: function () {
+  startServer: function () {
+    overwolf.web.createServer(WEB_SERVER_PORT, serverInfo => {
+      if (serverInfo.status === "error") {
+        console.log("Failed to create server: ");
+        return;
+      } else {
+        _server = serverInfo.server;
+        // it is always good practice to removeListener before adding it
+        _server.onRequest.removeListener(this.onRequest);
+        _server.onRequest.addListener(this.onRequest);
 
+        _server.listen(info => {
+          if (serverInfo.status === "error") {
+            console.log("Failed to open server socket.");
+            return;
+          }
+
+          console.log("Server listening status at " + info.url + " : " + info);
+        });
+      }
+    });
   },
-  test: function () {
-    var c = $('inGame');
-    var elts = [];
-    for (var i = 0; i < 5; i++) {
-      elts[i] = new Element("div", {id: "elt" + i});
-      elts[i].inject(c);
+  onRequest: function (info) {
+    // TODO: Is there a better way of getting "this"?
+    var controller = this.buildOrderController;
+    var content = JSON.parse(info.content);
+    if (info.url.endsWith(PATH_START_GAME)) {
+      controller.handleStartGame(content);
+    } else if (info.url.endsWith(PATH_UPDATE_GAME_TIME)) {
+      controller.handleUpdateGameTime(content);
+    } else if (info.url.endsWith(PATH_END_GAME)) {
+      controller.handleEndGame(content);
+    } else {
+      console.log("Unexpected URL: " + info.url);
+    }
+  },
+  handleStartGame: function (message) {
+    if (this.buildOrder !== null) {
+      this.buildOrder.cleanUp();
     }
 
-    elts[2].dispose();
+    var order = new BuildOrder();
+    var boElt = $("buildOrder");
+    Array.each(sampleData.terran.steps, function (step) {
+      var boeElt = new Element("div.buildOrderStep");
+      var boe = new BuildOrderEntry(boeElt, step.time, step.displayTime, step.command);
+      order.addEntry(boe);
+
+      boeElt.inject(boElt);
+      var dtime = new Element("span.displayTime");
+      dtime.set("text", boe.getDisplayTime());
+      dtime.inject(boeElt);
+      var cmd = new Element("span.command");
+      cmd.set("text", boe.getCommand());
+      cmd.inject(boeElt);
+    });
+
+    this.buildOrder = order;
+
+    console.log("Set up build order: " + this.buildOrder);
+  },
+  handleUpdateGameTime: function (message) {
+    var gameTimeMs = Math.round(parseFloat(message.displayTime) * 1000);
+    // TODO: Convert to mm:ss
+    $("gameTime").set("text", gameTimeMs / 1000);
+
+    if (this.buildOrder === null) {
+      return;
+    }
+
+    var currentNode = this.buildOrder.getCurrent();
+    if (currentNode === null) {
+      return;
+    }
+
+    var currentEntry = currentNode.getData();
+    // Start talking 1 second ahead of time
+    if (currentEntry.getTime() - 1000 <= gameTimeMs) {
+      responsiveVoice.speak(currentEntry.getCommand(), "US English Female");
+    }
+
+    if (currentEntry.getTime() <= gameTimeMs) {
+      // Remove this entry...
+      currentEntry.cleanUp();
+      // ... and move on to the next.
+      this.buildOrder.setCurrent(currentNode.getNext());
+    }
+  },
+  handleEndGame: function (message) {
+    if (this.buildOrder !== null) {
+      this.buildOrder.cleanUp();
+    }
   }
 });
 
@@ -166,12 +240,12 @@ var buildOrderController = new BuildOrderController();
 var sampleData = {
   terran: {
     steps: [
-      {time: 0, displayTime: "00:00", command: "Build an SCV"},
-      {time: 12000, displayTime: "00:12", command: "Build an SCV"},
-      {time: 17000, displayTime: "00:17", command: "Build a supply depot"},
-      {time: 24000, displayTime: "00:24", command: "Build an SCV"},
-      {time: 38000, displayTime: "00:38", command: "Build an SCV"},
-      {time: 39000, displayTime: "00:39", command: "Build a barracks"}
+      //{time: 0, displayTime: "00:00", command: "SCV"},
+      {time: 12000, displayTime: "00:12", command: "SCV"},
+      {time: 17000, displayTime: "00:17", command: "Supply depot"},
+      {time: 24000, displayTime: "00:24", command: "SCV"},
+      {time: 38000, displayTime: "00:38", command: "SCV"},
+      {time: 39000, displayTime: "00:39", command: "Barracks"}
     ]
   }
   // ... zerg, protoss...
@@ -193,6 +267,8 @@ function speak(head) {
                 // Target time for the next command
               },
               onend: function () {
+                head.getData().cleanUp();
+
                 if (nextTime === null) {
                   // This means we have no more steps
                   return;
@@ -214,10 +290,10 @@ function createSomething() {
   var buildOrder = new BuildOrder();
   var boElt = $("buildOrder");
   Array.each(sampleData.terran.steps, function (step) {
-    var boe = new BuildOrderEntry(step.time, step.displayTime, step.command);
+    var boeElt = new Element("div.buildOrderStep");
+    var boe = new BuildOrderEntry(boeElt, step.time, step.displayTime, step.command);
     buildOrder.addEntry(boe);
 
-    var boeElt = new Element("div.buildOrderStep");
     boeElt.inject(boElt);
     var dtime = new Element("span.displayTime");
     dtime.set("text", boe.getDisplayTime());
@@ -227,7 +303,7 @@ function createSomething() {
     cmd.inject(boeElt);
   });
 
-  console.log("Set up build order.");
+  console.log("Set up build order. =)");
 
   var head = buildOrder.getHead();
   speak(head);

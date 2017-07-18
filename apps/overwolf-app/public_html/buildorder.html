@@ -21,11 +21,10 @@
     <div class="resizeGrip" id="resizeGripBottomLeft" onmousedown="windowControl.resize('BottomLeft');"></div>
     <div class="resizeGrip" id="resizeGripLeft" onmousedown="windowControl.resize('Left');"></div>
     <div id="content" onmousedown="windowControl.move();">
-      <button onclick="createSomething();">Tester</button>
-      <div id="notInGame">Not in game</div>
+      <!--<button onclick="createSomething();">Tester</button>-->
       <div id="inGame">
         <div class="gameTime">
-          <label>Game time:</label>
+          <span>Game time:</span><span id="gameTime"></span>
         </div>
         <div id="buildOrder" class="buildOrder">
 
