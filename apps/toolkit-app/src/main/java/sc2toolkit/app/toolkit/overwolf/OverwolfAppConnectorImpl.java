@@ -37,14 +37,12 @@ public class OverwolfAppConnectorImpl implements OverwolfAppConnector {
 
   @Override
   public CompletionStage<Void> startGame(Player opponent) {
-    StartGameMessage message = new StartGameMessage(opponent);
-    return sendMessage("/startGame", message);
+    return sendMessage("/startGame", new StartGameMessage(opponent));
   }
 
   @Override
   public CompletionStage<Void> updateGameTime(double displayTime) {
-    LOG.info("Not updating game time. Message not implemented yet.");
-    return CompletableFuture.completedFuture(null);
+    return sendMessage("/updateGameTime", new UpdateGameTimeMessage(displayTime));
   }
 
   @Override
