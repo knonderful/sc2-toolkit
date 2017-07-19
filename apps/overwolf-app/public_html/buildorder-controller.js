@@ -54,7 +54,6 @@ var BuildOrder = new Class({
     if (lastTail === null) {
       this.head = this.tail;
       this.current = this.tail;
-      console.log("SETTING CURRENT TO " + this.current);
     } else {
       lastTail.setNext(this.tail);
     }
@@ -73,7 +72,6 @@ var BuildOrder = new Class({
     return this.current;
   },
   setCurrent: function (node) {
-    console.log("... SETTING CURRENT TO " + node);
     this.current = node;
   }
 });
