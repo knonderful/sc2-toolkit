@@ -105,6 +105,10 @@ div.buildOrderStep {
   padding-bottom: 3px;
 }
 
+div.buildOrderStep.highlighted {
+  background: rgba(0, 255, 0, 0.4);
+}
+
 div.buildOrderStep .displayTime {
 	padding-right: 6px;
 }

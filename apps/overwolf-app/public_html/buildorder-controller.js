@@ -1,3 +1,9 @@
+var Announcer = new Class({
+  say: function (message) {
+    responsiveVoice.speak(message, "US English Female");
+  }
+});
+
 var LinkedNode = new Class({
   initialize: function (data) {
     this.previous = null;
@@ -22,6 +28,7 @@ var LinkedNode = new Class({
 });
 
 var BuildOrderEntry = new Class({
+  announced: false,
   initialize: function (element, time, displayTime, command) {
     this.element = element;
     this.time = time;
@@ -39,6 +46,18 @@ var BuildOrderEntry = new Class({
   },
   cleanUp: function () {
     this.element.dispose();
+  },
+  highlight: function () {
+    this.element.addClass("highlighted");
+  },
+  unhighlight: function () {
+    this.element.removeClass("highlighted");
+  },
+  isAnnounced: function () {
+    return this.announced;
+  },
+  setAnnounced: function (flag) {
+    this.announced = flag;
   }
 });
 
@@ -128,15 +147,26 @@ var Sc2GameInfo = new Class({
   }
 });
 
+// Web server port to which the SC2 Tool Kit application can connect
 const WEB_SERVER_PORT = 8989;
+// Path that identifies a start-of-game message
 const PATH_START_GAME = "/startGame";
+// Path that identifies an update-game-time message
 const PATH_UPDATE_GAME_TIME = "/updateGameTime";
+// Path that identifies a end-of-game message
 const PATH_END_GAME = "/endGame";
+// Time in ms to announce the next build order element
+const ANNOUNCE_TIME_MS = 2000;
+// Time in ms to retain a build order element
+const ENTRY_RETAIN_TIME_MS = 5000;
+// Maximum number of build order elements to retain (overrides retain time)
+const ENTRY_RETAIN_MAX_ITEMS = 5;
 
 var BuildOrderController = new Class({
   buildOrder: null,
   onLoad: function () {
     this.startServer();
+    this.announcer = new Announcer();
   },
   startServer: function () {
     overwolf.web.createServer(WEB_SERVER_PORT, serverInfo => {
@@ -159,6 +189,7 @@ var BuildOrderController = new Class({
     });
   },
   onRequest: function (info) {
+    console.log("GOT " + info.url);
     var content = JSON.parse(info.content);
     if (info.url.endsWith(PATH_START_GAME)) {
       this.handleStartGame(content);
@@ -193,7 +224,9 @@ var BuildOrderController = new Class({
 
     this.buildOrder = order;
 
-    console.log("Set up build order: " + this.buildOrder);
+    this.announcer.say("Good luck and have fun");
+
+    console.log("glhf <3");
   },
   handleUpdateGameTime: function (message) {
     var gameTimeMs = Math.round(parseFloat(message.displayTime) * 1000);
@@ -204,22 +237,45 @@ var BuildOrderController = new Class({
       return;
     }
 
-    var currentNode = this.buildOrder.getCurrent();
+    var currentNode = this.buildOrder.getHead();
+
+    // Remove nodes that are beyond the retain time
+    var retainCutOff = gameTimeMs - ENTRY_RETAIN_TIME_MS;
+    while (currentNode !== null && currentNode.getData().getTime() < retainCutOff) {
+      currentNode.getData().cleanUp();
+      currentNode = currentNode.getNext();
+      if (currentNode !== null) {
+        currentNode.setPrevious(null);
+      }
+    }
+
+    // Unhighlight elements that have passed in time
+    while (currentNode !== null && currentNode.getData().getTime() < gameTimeMs) {
+      currentNode.getData().unhighlight();
+      currentNode = currentNode.getNext();
+    }
+
     if (currentNode === null) {
+      // We have reached the end of the build order
       return;
     }
 
-    var currentEntry = currentNode.getData();
-    // Start talking 1 second ahead of time
-    if (currentEntry.getTime() - 1000 <= gameTimeMs) {
-      responsiveVoice.speak(currentEntry.getCommand(), "US English Female");
+    // Highlight the first entry that is in the future
+    currentNode.getData().highlight();
+
+    // Announce all upcoming entries
+    var announceCutOff = gameTimeMs + ANNOUNCE_TIME_MS;
+    var commands = [];
+    while (currentNode !== null && currentNode.getData().getTime() <= announceCutOff) {
+      if (!currentNode.getData().isAnnounced()) {
+        currentNode.getData().setAnnounced(true);
+        commands[commands.length] = currentNode.getData().getCommand();
+      }
+      currentNode = currentNode.getNext();
     }
 
-    if (currentEntry.getTime() <= gameTimeMs) {
-      // Remove this entry...
-      currentEntry.cleanUp();
-      // ... and move on to the next.
-      this.buildOrder.setCurrent(currentNode.getNext());
+    if (commands.length > 0) {
+      this.announcer.say(commands.toString());
     }
   },
   handleEndGame: function (message) {
@@ -238,10 +294,32 @@ var sampleData = {
     steps: [
       //{time: 0, displayTime: "00:00", command: "SCV"},
       {time: 12000, displayTime: "00:12", command: "SCV"},
-      {time: 17000, displayTime: "00:17", command: "Supply depot"},
+      {time: 17000, displayTime: "00:17", command: "Supply Depot"},
       {time: 24000, displayTime: "00:24", command: "SCV"},
       {time: 38000, displayTime: "00:38", command: "SCV"},
-      {time: 39000, displayTime: "00:39", command: "Barracks"}
+      {time: 39000, displayTime: "00:39", command: "Barracks"},
+      {time: 44000, displayTime: "00:44", command: "Refinery"},
+      {time: 50000, displayTime: "00:50", command: "SCV"},
+      {time: 62000, displayTime: "01:02", command: "SCV"},
+      {time: 74000, displayTime: "01:14", command: "SCV"},
+      {time: 86000, displayTime: "01:26", command: "Orbital Command"},
+      {time: 86100, displayTime: "01:26", command: "Reaper"},
+      {time: 99000, displayTime: "01:39", command: "Command Center"},
+      {time: 110000, displayTime: "01:50", command: "Barracks"},
+      {time: 113000, displayTime: "01:53", command: "SCV"},
+      {time: 119000, displayTime: "01:59", command: "Barracks Reactor"},
+      {time: 123000, displayTime: "02:03", command: "Supply Depot"},
+      {time: 126000, displayTime: "02:06", command: "SCV"},
+      {time: 132000, displayTime: "02:12", command: "Refinery"},
+      {time: 138000, displayTime: "02:18", command: "SCV"},
+      {time: 144000, displayTime: "02:24", command: "Factory"},
+      {time: 150000, displayTime: "02:30", command: "SCV"},
+      {time: 155000, displayTime: "02:35", command: "2 Marines"},
+      {time: 157000, displayTime: "02:37", command: "Barracks Tech Lab"},
+      {time: 162000, displayTime: "02:42", command: "SCV"},
+      {time: 171000, displayTime: "02:51", command: "Orbital Command"},
+      {time: 175000, displayTime: "02:55", command: "SCV"},
+      {time: 178000, displayTime: "02:58", command: "Stimpack"}
     ]
   }
   // ... zerg, protoss...
