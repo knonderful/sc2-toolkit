@@ -145,9 +145,7 @@ var BuildOrderController = new Class({
         return;
       } else {
         _server = serverInfo.server;
-        // it is always good practice to removeListener before adding it
-        _server.onRequest.removeListener(this.onRequest);
-        _server.onRequest.addListener(this.onRequest);
+        _server.onRequest.addListener(info => this.onRequest(info));
 
         _server.listen(info => {
           if (serverInfo.status === "error") {
@@ -161,15 +159,13 @@ var BuildOrderController = new Class({
     });
   },
   onRequest: function (info) {
-    // TODO: Is there a better way of getting "this"?
-    var controller = this.buildOrderController;
     var content = JSON.parse(info.content);
     if (info.url.endsWith(PATH_START_GAME)) {
-      controller.handleStartGame(content);
+      this.handleStartGame(content);
     } else if (info.url.endsWith(PATH_UPDATE_GAME_TIME)) {
-      controller.handleUpdateGameTime(content);
+      this.handleUpdateGameTime(content);
     } else if (info.url.endsWith(PATH_END_GAME)) {
-      controller.handleEndGame(content);
+      this.handleEndGame(content);
     } else {
       console.log("Unexpected URL: " + info.url);
     }
