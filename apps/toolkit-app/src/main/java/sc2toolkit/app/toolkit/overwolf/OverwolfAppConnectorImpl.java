@@ -12,7 +12,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.Charset;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import sc2toolkit.game.client.model.Player;
@@ -47,8 +46,7 @@ public class OverwolfAppConnectorImpl implements OverwolfAppConnector {
 
   @Override
   public CompletionStage<Void> endGame() {
-    LOG.info("Not notifying end-game. Message not implemented yet.");
-    return CompletableFuture.completedFuture(null);
+    return sendMessage("/endGame", new EndGameMessage());
   }
 
   private CompletionStage<Void> sendMessage(String path, Object message) {
