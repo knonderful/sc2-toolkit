@@ -235,7 +235,7 @@ public class HttpClient {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpResponse response) throws Exception {
-      LOG.info(() -> String.format("Received HTTP response: %s.", response));
+      LOG.fine(() -> String.format("Received HTTP response: %s.", response));
 
       rrt.handleResponse(response);
     }
