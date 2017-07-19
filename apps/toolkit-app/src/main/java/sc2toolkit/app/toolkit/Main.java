@@ -41,6 +41,9 @@ import sc2toolkit.game.client.Sc2AppChangeHandler;
 import sc2toolkit.game.client.Sc2AppStateListener;
 import sc2toolkit.game.client.Sc2StateTracker;
 import sc2toolkit.game.client.model.Player;
+import sc2toolkit.game.client.model.PlayerType;
+import sc2toolkit.game.client.model.Race;
+import sc2toolkit.game.client.model.Result;
 
 public class Main extends Application {
 
@@ -182,6 +185,7 @@ public class Main extends Application {
 
     OverwolfAppConnectorFactory factory = new OverwolfAppConnectorFactory(exitObservable);
     Button startButton = new Button("Start");
+    Button simulateButton = new Button("Simulate");
 
     startButton.onActionProperty().set(event -> {
       InetAddress address;
@@ -200,10 +204,33 @@ public class Main extends Application {
           return;
         }
 
+        simulateButton.onActionProperty().set(evx -> {
+          List<Player> players = Arrays.asList(
+                  new Player(1, "knon", PlayerType.USER, Race.TERRAN, Result.UNDECIDED),
+                  new Player(2, "Byun", PlayerType.USER, Race.TERRAN, Result.UNDECIDED)
+          );
+          this.overwolfSc2EventHandler.enterGame(players);
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+          }
+          for (int i = 0; i < 30; i++) {
+            this.overwolfSc2EventHandler.updateDisplayTime(i);
+            try {
+              Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+              Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
+          //this.overwolfSc2EventHandler.enterMenus();
+        });
+
         this.overwolfSc2EventHandler.setConnector(connector);
       });
     });
     announcementGrid.add(startButton, 0, 0);
+    announcementGrid.add(simulateButton, 1, 0);
 
     return announcementGrid;
   }
