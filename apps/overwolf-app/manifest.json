@@ -28,7 +28,8 @@
         "max_size": {
           "width": 600,
           "height": 500
-        }
+        },
+        "desktop_only": true
       },
       "BuildOrder": {
         "file": "public_html/buildorder.html",
