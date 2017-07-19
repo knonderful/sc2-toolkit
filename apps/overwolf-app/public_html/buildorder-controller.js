@@ -158,7 +158,7 @@ const PATH_END_GAME = "/endGame";
 // Time in ms to announce the next build order element
 const ANNOUNCE_TIME_MS = 2000;
 // Time in ms to retain a build order element
-const ENTRY_RETAIN_TIME_MS = 5000;
+const ENTRY_RETAIN_TIME_MS = 10000;
 // Maximum number of build order elements to retain (overrides retain time)
 const ENTRY_RETAIN_MAX_ITEMS = 5;
 
