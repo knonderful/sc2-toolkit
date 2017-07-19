@@ -226,6 +226,8 @@ var BuildOrderController = new Class({
     if (this.buildOrder !== null) {
       this.buildOrder.cleanUp();
     }
+
+    this.buildOrder = null;
   }
 });
 
